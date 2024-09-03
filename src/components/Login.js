@@ -1,24 +1,89 @@
 import React, { useRef, useState } from 'react'
 import Header from './Header'
 import { checkValiddata } from '../utils/Validate';
+import { auth } from '../utils/firebase';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile} from 'firebase/auth';
+import { useDispatch } from 'react-redux';
+import { addUser } from '../utils/userSlice';
 
 const Login = () => {
   const [isSigninForm , setisSigninForm ] =useState(true);
   const [errorMessage , setErrormessage]= useState(null);
 
-  const name = useRef(null);
+  const dispatch = useDispatch();
+
+   const name = useRef(null);
   const email =useRef(null);
   const password =useRef(null);
+
   
   const toggleSigninform =()=>{
     setisSigninForm(!isSigninForm);
   }
-  const handleButtonclick =() =>{
-    //Vlidate form data
-    const message =checkValiddata( name.current.value , email.current.value , password.current.value );
-     setErrormessage(message);
 
-  }
+  const handleButtonclick =() =>{
+    //Validate form data
+    const message =checkValiddata( email.current.value , password.current.value );
+     setErrormessage(message);
+     if(message) return;
+
+     if(!isSigninForm){
+        //sign up logic
+        createUserWithEmailAndPassword(auth ,
+           email.current.value , 
+           password.current.value
+          )
+             .then((userCredential) => {
+              const user = userCredential.user;
+
+              updateProfile(user , {
+                displayName : name.current.value , 
+                photoURL:"https://occ-0-6247-2164.1.nflxso.net/dnm/api/v6/K6hjPJd6cR6FpVELC5Pd6ovHRSk/AAAABdpkabKqQAxyWzo6QW_ZnPz1IZLqlmNfK-t4L1VIeV1DY00JhLo_LMVFp936keDxj-V5UELAVJrU--iUUY2MaDxQSSO-0qw.png?r=e6e",
+              }).then(() => {
+                //profile updated
+                const {uid , email , displayName , photoURL} = auth.currentUser;
+                  dispatch(
+                    addUser({
+                        uid:uid ,
+                        email : email ,
+                        displayName : displayName , 
+                        photoURL : photoURL
+                      })
+                    );
+                
+              }).catch((error) => {
+                //error occured
+                setErrormessage(error.message);
+              });
+              
+             })
+
+             .catch((error) => {
+              const errorCode =error.code;
+              const errorMessage = error.message;
+              setErrormessage(errorCode + "-" + errorMessage);
+             })
+        
+     }
+     else {
+        //sign in logic
+        signInWithEmailAndPassword(auth ,
+           email.current.value , 
+           password.current.value)
+
+        .then((userCredential) => {
+
+         const user = userCredential.user;
+
+        })
+        .catch((error) => {
+         const errorCode =error.code;
+         const errorMessage = error.message;
+         setErrormessage(errorCode + "-" + errorMessage);
+        });
+     }
+  };
+
   return (
     <div>
     <Header/>

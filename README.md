@@ -9,6 +9,14 @@
 - sign up form
 - Form validation
 - use ref hook 
+- FireBase setup
+- deploying to production
+- Create sign up user account
+- Implement sign In user Api
+- Created redux store with user slice
+- Implemented sign out
+- update Profile
+- Bug fix : sign up user displayname and profie picture update
 
 # Features
 
